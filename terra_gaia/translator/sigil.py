@@ -85,6 +85,10 @@ class SigilGenerator:
             frequency: Chakra frequency (e.g., "396 Hz")
             wound: Wound type (e.g., "root", "sacral", "solar_plexus")
             solver_id: Unique solver identifier for procedural variation
+        
+        Note:
+            If the wound type is invalid and a valid frequency is provided,
+            the wound type will be derived from the frequency mapping.
         """
         self.frequency = frequency
         self.wound = wound.lower()
@@ -92,11 +96,14 @@ class SigilGenerator:
         
         # Validate wound type
         if self.wound not in self.COLOR_PALETTES:
-            # If frequency is provided, try to map it to wound
+            # If frequency is provided and recognized, map it to wound type
             if frequency in self.FREQUENCY_MAP:
                 self.wound = self.FREQUENCY_MAP[frequency]
             else:
-                raise ValueError(f"Unsupported wound type: {wound}")
+                raise ValueError(
+                    f"Unsupported wound type: {wound}. "
+                    f"Valid types are: {', '.join(self.COLOR_PALETTES.keys())}"
+                )
         
         # Get color palette
         self.colors = self.COLOR_PALETTES[self.wound]
@@ -300,6 +307,11 @@ class SigilGenerator:
         
         Returns:
             Path to the generated sigil image
+        
+        Note:
+            Supported wound types are 'root', 'sacral', and 'solar_plexus'.
+            Other valid wound types (heart, throat, third_eye, crown) will
+            generate a default mandala pattern with chakra-appropriate colors.
         """
         # Create output directory if it doesn't exist
         output_file = Path(output_path)
@@ -322,7 +334,7 @@ class SigilGenerator:
         elif self.wound == "solar_plexus":
             self._draw_solar_plexus_geometry(draw, center, geometry_size)
         else:
-            # Default to a simple mandala pattern for other wound types
+            # Default mandala pattern for other wound types (extensible design)
             for i in range(self.variations["layer_count"]):
                 radius = geometry_size * (1 - i * 0.2)
                 color = self.colors["primary"] if i % 2 == 0 else self.colors["secondary"]
